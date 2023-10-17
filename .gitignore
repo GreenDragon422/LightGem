@@ -30,3 +30,10 @@
 *.exe
 *.out
 *.app
+
+# PlatformIO/Arduino/C++
+.pioenvs
+CMakeListsPrivate.txt
+.piolibdeps
+.pio
+cmake-build-*
