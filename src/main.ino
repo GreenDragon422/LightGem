@@ -12,6 +12,8 @@ int lastSensorState = 0;
 
 bool isTouched;
 int previousIsTouched = 0;
+int transitionTimeSec = 10;   // transition time in seconds
+int delayTimeMs = transitionTimeSec * 1000 / 255; // compute the delay in milliseconds based on the transition time
 
 bool CurrentTouchState();
 
@@ -30,18 +32,21 @@ void loop ()
 
     if (isTouched && !previousIsTouched)
     {
-        for(int fadeValue = 0 ; fadeValue <= 255; fadeValue +=5) {
+        for(int fadeValue = 0 ; fadeValue <= 255; fadeValue++) {
             analogWrite(ledPin, fadeValue);
-            delay(30);
+            delay(delayTimeMs);
+            Serial.println("Light: " + String(fadeValue));
         }
     }
     else if (!isTouched && previousIsTouched)
     {
-        for(int fadeValue = 255 ; fadeValue >= 0; fadeValue -=5) {
+        for(int fadeValue = 255 ; fadeValue >= 0; fadeValue--) {
             analogWrite(ledPin, fadeValue);
-            delay(30);
+            delay(delayTimeMs);
+            Serial.println("Dark: " + String(fadeValue));
         }
     }
+
     previousIsTouched = isTouched;
 }
 
