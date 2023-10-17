@@ -12,7 +12,7 @@ int lastSensorState = 0;
 
 bool isTouched;
 int previousIsTouched = 0;
-int transitionTimeSec = 10;   // transition time in seconds
+int transitionTimeSec = 1;   // transition time in seconds
 int delayTimeMs = transitionTimeSec * 1000 / 255; // compute the delay in milliseconds based on the transition time
 
 bool CurrentTouchState();
