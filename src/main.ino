@@ -11,6 +11,7 @@ int sensorState = 0;
 int lastSensorState = 0;
 
 bool isTouched;
+int previousIsTouched = 0;
 
 bool CurrentTouchState();
 
@@ -27,14 +28,21 @@ void loop ()
 {
     isTouched = CurrentTouchState();
 
-    if (isTouched)
+    if (isTouched && !previousIsTouched)
     {
-        analogWrite(ledPin,255);
+        for(int fadeValue = 0 ; fadeValue <= 255; fadeValue +=5) {
+            analogWrite(ledPin, fadeValue);
+            delay(30);
+        }
     }
-    else
+    else if (!isTouched && previousIsTouched)
     {
-        analogWrite(ledPin,0);
+        for(int fadeValue = 255 ; fadeValue >= 0; fadeValue -=5) {
+            analogWrite(ledPin, fadeValue);
+            delay(30);
+        }
     }
+    previousIsTouched = isTouched;
 }
 
 bool CurrentTouchState() {
