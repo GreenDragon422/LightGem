@@ -18,9 +18,9 @@ void setup ()
 {
     Serial.begin(9600);
     pinMode(ledPin,OUTPUT);
-    pinMode (LED_BUILTIN, OUTPUT) ;//define LED as output interface
+    pinMode (LED_BUILTIN, OUTPUT) ;
     digitalWrite(LED_BUILTIN,LOW);
-    pinMode (touchSensorInputPin, INPUT) ;// define metal touch sensor output interface
+    pinMode (touchSensorInputPin, INPUT) ;
 }
 
 void loop ()
