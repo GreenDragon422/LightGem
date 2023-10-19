@@ -1,9 +1,14 @@
 #include <arduino.h>
+#include <LiquidCrystal.h>
 
-int Led = 13;// define LED Interface
+const int rs = 2, en = 3, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+char buffer[50];
+
 int touchSensorValue = 0;
-int touchSensorInputPin = 3;
-int ledPin = 8;
+int touchSensorInputPin = 11;
+int ledPin = 12;
 
 long lastDebounceTime = 0;
 unsigned long debounceDelay = 200;
@@ -23,11 +28,25 @@ void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
     pinMode(touchSensorInputPin, INPUT);
+    lcd.begin(16, 2);
 }
 
 void loop ()
 {
     isTouched = CurrentTouchState();
+
+    lcd.setCursor(0,0);
+
+    if (isTouched && !previousIsTouched)
+    {
+        lcd.clear();
+        lcd.print("Touched");
+    }
+    else if (!isTouched && previousIsTouched)
+    {
+        lcd.clear();
+        lcd.print("Not Touched");
+    }
 
     if (isTouched && !previousIsTouched)
     {
@@ -35,6 +54,10 @@ void loop ()
             analogWrite(ledPin, fadeValue);
             delay(delayTimeMs);
             Serial.println("Light: " + String(fadeValue));
+
+            sprintf(buffer, "Led Value: %3d", fadeValue);
+            lcd.setCursor(0,1);
+            lcd.print(buffer);
         }
     }
     else if (!isTouched && previousIsTouched)
@@ -43,6 +66,10 @@ void loop ()
             analogWrite(ledPin, fadeValue);
             delay(delayTimeMs);
             Serial.println("Dark: " + String(fadeValue));
+
+            sprintf(buffer, "Led Value: %3d", fadeValue);
+            lcd.setCursor(0,1);
+            lcd.print(buffer);
         }
     }
 
