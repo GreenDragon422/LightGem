@@ -17,11 +17,14 @@ int sensorState = 0;
 int lastSensorState = 0;
 
 bool isTouched;
-int previousIsTouched = 0;
 int transitionTimeSec = 1;   // transition time in seconds
 int delayTimeMs = transitionTimeSec * 1000 / 255; // compute the delay in milliseconds based on the transition time
-int curLedValue = 0;  // Current brightness value of the led
+int currentLedValue = 0;  // Current brightness value of the led
 int targetLedValue = 0; // Target brightness value of the led
+static unsigned long lastDimTimeUpdate = 0;  // holds the time of the last LCD update
+
+// declare dimTimeMessage as a global variable
+char dimTimeMessage[17];
 
 enum State
 {
@@ -35,14 +38,23 @@ bool isSensorTouched();
 
 void updateLed()
 {
-    if(curLedValue != targetLedValue )
+    if(currentLedValue != targetLedValue )
     {
-        curLedValue += targetLedValue > curLedValue ? 1 : -1;
-        analogWrite(ledPin, curLedValue);
-        sprintf(fadeValueBuffer, "Led Value: %3d", curLedValue);
+        currentLedValue += targetLedValue > currentLedValue ? 1 : -1;
+        analogWrite(ledPin, currentLedValue);
+        sprintf(fadeValueBuffer, "Led Value: %3d", currentLedValue);
         lcd.setCursor(0, 1);
         lcd.print(fadeValueBuffer);
     }
+}
+
+int digitCount(int number) {  // Helper function to calculate the number of digits in 'number'. Returns a digit count.
+    int count = 0;
+    while(number != 0) {
+        number /= 10;
+        ++count;
+    }
+    return count;
 }
 
 void DisplayMessage(const char* message)
@@ -50,6 +62,17 @@ void DisplayMessage(const char* message)
     lcd.setCursor(0, 0);
     sprintf(touchBuffer, "%-16s", message);
     lcd.print(touchBuffer);
+}
+
+// Function to format the dim time message
+void formatDimTimeMessage(int elapsedTime) {
+    int secondStringLength = digitCount(elapsedTime);
+    int spaceCount = 16 - 5 - secondStringLength;  // Compute available space, 16 total - "Dim: " 5 chars - width of seconds
+
+    char spaceBuffer[spaceCount + 1];
+    memset(spaceBuffer, ' ', spaceCount);
+    spaceBuffer[spaceCount] = '\0';  // don't forget to terminate the string
+    sprintf(dimTimeMessage, "Dim: %s%d", spaceBuffer, elapsedTime);
 }
 
 void setup() {
@@ -73,7 +96,7 @@ void loop ()
     else if(previousState == TOUCHED)
     {
         currentState = DIM;
-        targetLedValue = int(255 * 0.75);
+        targetLedValue = int(255 * 0.50);
         dimMillis = millis(); // Save the time when 'Dim' state is entered
     }
     else if(previousState == DIM)
@@ -101,9 +124,17 @@ void loop ()
         }
         case DIM:
         {
-            DisplayMessage("Dim");
-            lcd.setCursor(14, 0);
-            lcd.print((int)((millis() - dimMillis) / 1000));  // Display time passed since 'Dim' state was entered
+            unsigned long now = millis();
+
+            if (now - lastDimTimeUpdate >= 1000) {  // check if at least one second has passed
+                int elapsedTime = (int) ((now - dimMillis) / 1000);
+
+                formatDimTimeMessage(elapsedTime);
+                lcd.setCursor(0, 0);
+                lcd.print(dimTimeMessage);  // Display composed message
+
+                lastDimTimeUpdate = now;  // update the time of the last LCD update
+            }
             break;
         }
         default:
