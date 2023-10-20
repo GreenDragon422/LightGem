@@ -20,8 +20,37 @@ bool isTouched;
 int previousIsTouched = 0;
 int transitionTimeSec = 1;   // transition time in seconds
 int delayTimeMs = transitionTimeSec * 1000 / 255; // compute the delay in milliseconds based on the transition time
+int curLedValue = 0;  // Current brightness value of the led
+int targetLedValue = 0; // Target brightness value of the led
 
-bool CurrentTouchState();
+enum State
+{
+    UNKNOWN,
+    TOUCHED,
+    NOT_TOUCHED,
+    DIM
+} currentState = UNKNOWN;
+
+bool isSensorTouched();
+
+void updateLed()
+{
+    if(curLedValue != targetLedValue )
+    {
+        curLedValue += targetLedValue > curLedValue ? 1 : -1;
+        analogWrite(ledPin, curLedValue);
+        sprintf(fadeValueBuffer, "Led Value: %3d", curLedValue);
+        lcd.setCursor(0, 1);
+        lcd.print(fadeValueBuffer);
+    }
+}
+
+void DisplayMessage(const char* message)
+{
+    lcd.setCursor(0, 0);
+    sprintf(touchBuffer, "%-16s", message);
+    lcd.print(touchBuffer);
+}
 
 void setup() {
     pinMode(ledPin, OUTPUT);
@@ -33,48 +62,58 @@ void setup() {
 
 void loop ()
 {
-    isTouched = CurrentTouchState();
+    static unsigned long dimMillis; // Add a variable to hold the time when 'Dim' state is entered
 
-    if (isTouched && !previousIsTouched)
+    State previousState = currentState;
+    if (isSensorTouched())
     {
-        lcd.setCursor(0,0);
-        sprintf(touchBuffer, "%-16s", "Touched");
-        lcd.print(touchBuffer);
+        currentState = TOUCHED;
+        targetLedValue = 255;
     }
-    else if (!isTouched && previousIsTouched)
+    else if(previousState == TOUCHED)
     {
-        lcd.setCursor(0,0);
-        sprintf(touchBuffer, "%-16s", "Not Touched");
-        lcd.print(touchBuffer);
+        currentState = DIM;
+        targetLedValue = int(255 * 0.75);
+        dimMillis = millis(); // Save the time when 'Dim' state is entered
     }
-
-    if (isTouched && !previousIsTouched)
+    else if(previousState == DIM)
     {
-        for(int fadeValue = 0 ; fadeValue <= 255; fadeValue++) {
-            analogWrite(ledPin, fadeValue);
-            delay(delayTimeMs);
-
-            sprintf(fadeValueBuffer, "Led Value: %3d", fadeValue);
-            lcd.setCursor(0,1);
-            lcd.print(fadeValueBuffer);
-        }
-    }
-    else if (!isTouched && previousIsTouched)
-    {
-        for(int fadeValue = 255 ; fadeValue >= 0; fadeValue--) {
-            analogWrite(ledPin, fadeValue);
-            delay(delayTimeMs);
-
-            sprintf(fadeValueBuffer, "Led Value: %3d", fadeValue);
-            lcd.setCursor(0,1);
-            lcd.print(fadeValueBuffer);
+        if (millis() - dimMillis >= 60000) // Wait for one minute before changing from 'Dim' to 'Untouched'
+        {
+            currentState = NOT_TOUCHED;
+            targetLedValue = 0;
         }
     }
 
-    previousIsTouched = isTouched;
-}
+    updateLed();
 
-bool CurrentTouchState() {
+    switch (currentState)
+    {
+        case TOUCHED:
+        {
+            DisplayMessage("Touched");
+            break;
+        }
+        case NOT_TOUCHED:
+        {
+            DisplayMessage("Not Touched");
+            break;
+        }
+        case DIM:
+        {
+            DisplayMessage("Dim");
+            lcd.setCursor(14, 0);
+            lcd.print((int)((millis() - dimMillis) / 1000));  // Display time passed since 'Dim' state was entered
+            break;
+        }
+        default:
+            break;
+    }
+
+    // Wait for led brightness updating
+    delay(delayTimeMs);}
+
+bool isSensorTouched() {
     int currentSensorValue = digitalRead(touchSensorInputPin);
 
     if (touchSensorValue != lastSensorState)
