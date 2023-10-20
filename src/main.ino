@@ -4,7 +4,8 @@
 const int rs = 2, en = 3, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
-char buffer[50];
+char fadeValueBuffer[50];
+char touchBuffer[50];
 
 int touchSensorValue = 0;
 int touchSensorInputPin = 11;
@@ -35,17 +36,17 @@ void loop ()
 {
     isTouched = CurrentTouchState();
 
-    lcd.setCursor(0,0);
-
     if (isTouched && !previousIsTouched)
     {
-        lcd.clear();
-        lcd.print("Touched");
+        lcd.setCursor(0,0);
+        sprintf(touchBuffer, "%-16s", "Touched");
+        lcd.print(touchBuffer);
     }
     else if (!isTouched && previousIsTouched)
     {
-        lcd.clear();
-        lcd.print("Not Touched");
+        lcd.setCursor(0,0);
+        sprintf(touchBuffer, "%-16s", "Not Touched");
+        lcd.print(touchBuffer);
     }
 
     if (isTouched && !previousIsTouched)
@@ -55,9 +56,9 @@ void loop ()
             delay(delayTimeMs);
             Serial.println("Light: " + String(fadeValue));
 
-            sprintf(buffer, "Led Value: %3d", fadeValue);
+            sprintf(fadeValueBuffer, "Led Value: %3d", fadeValue);
             lcd.setCursor(0,1);
-            lcd.print(buffer);
+            lcd.print(fadeValueBuffer);
         }
     }
     else if (!isTouched && previousIsTouched)
@@ -67,9 +68,9 @@ void loop ()
             delay(delayTimeMs);
             Serial.println("Dark: " + String(fadeValue));
 
-            sprintf(buffer, "Led Value: %3d", fadeValue);
+            sprintf(fadeValueBuffer, "Led Value: %3d", fadeValue);
             lcd.setCursor(0,1);
-            lcd.print(buffer);
+            lcd.print(fadeValueBuffer);
         }
     }
 
