@@ -24,7 +24,6 @@ int delayTimeMs = transitionTimeSec * 1000 / 255; // compute the delay in millis
 bool CurrentTouchState();
 
 void setup() {
-    Serial.begin(9600);
     pinMode(ledPin, OUTPUT);
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
@@ -54,7 +53,6 @@ void loop ()
         for(int fadeValue = 0 ; fadeValue <= 255; fadeValue++) {
             analogWrite(ledPin, fadeValue);
             delay(delayTimeMs);
-            Serial.println("Light: " + String(fadeValue));
 
             sprintf(fadeValueBuffer, "Led Value: %3d", fadeValue);
             lcd.setCursor(0,1);
@@ -66,7 +64,6 @@ void loop ()
         for(int fadeValue = 255 ; fadeValue >= 0; fadeValue--) {
             analogWrite(ledPin, fadeValue);
             delay(delayTimeMs);
-            Serial.println("Dark: " + String(fadeValue));
 
             sprintf(fadeValueBuffer, "Led Value: %3d", fadeValue);
             lcd.setCursor(0,1);
@@ -98,7 +95,6 @@ bool CurrentTouchState() {
             {
                 isTouched = false;
             }
-            Serial.println(sensorState);
         }
     }
 
