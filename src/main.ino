@@ -1,9 +1,18 @@
 #include <arduino.h>
+
+#ifndef ARDUINO_AVR_ATTINYX5
 #include <LiquidCrystal.h>
+#else
+#include <Wire.h>
+#include <hd44780.h>
+#include <hd44780ioClass/hd44780_I2Cexp.h>
+#endif
 
 #ifndef ARDUINO_AVR_ATTINYX5
 const int rs = 2, en = 3, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+#else
+hd44780_I2Cexp lcd(0,16,2);
 #endif
 
 char fadeValueBuffer[50];
@@ -20,7 +29,7 @@ int touchSensorInputPin = PB3;
 #ifndef ARDUINO_AVR_ATTINYX5
 int ledPin = 12;
 #else
-int ledPin = PB0;
+int ledPin = PB1;
 #endif
 
 long lastDebounceTime = 0;
@@ -55,11 +64,9 @@ void updateLed()
         currentLedValue += targetLedValue > currentLedValue ? 1 : -1;
         analogWrite(ledPin, currentLedValue);
 
-#ifndef ARDUINO_AVR_ATTINYX5
         sprintf(fadeValueBuffer, "Led Value: %3d", currentLedValue);
         lcd.setCursor(0, 1);
         lcd.print(fadeValueBuffer);
-#endif
     }
 }
 
@@ -74,11 +81,9 @@ int digitCount(int number) {  // Helper function to calculate the number of digi
 
 void DisplayMessage(const char* message)
 {
-#ifndef ARDUINO_AVR_ATTINYX5
     lcd.setCursor(0, 0);
     sprintf(touchBuffer, "%-16s", message);
     lcd.print(touchBuffer);
-#endif
 }
 
 // Function to format the dim time message
@@ -100,10 +105,7 @@ void setup() {
 #endif
 
     pinMode(touchSensorInputPin, INPUT);
-
-#ifndef ARDUINO_AVR_ATTINYX5
     lcd.begin(16, 2);
-#endif
 }
 
 void loop ()
@@ -152,11 +154,9 @@ void loop ()
             if (now - lastDimTimeUpdate >= 1000) {  // check if at least one second has passed
                 int elapsedTime = (int) ((now - dimMillis) / 1000);
 
-#ifndef ARDUINO_AVR_ATTINYX5
                 formatDimTimeMessage(elapsedTime);
                 lcd.setCursor(0, 0);
                 lcd.print(dimTimeMessage);  // Display composed message
-#endif
 
                 lastDimTimeUpdate = now;  // update the time of the last LCD update
             }
