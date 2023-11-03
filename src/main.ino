@@ -1,15 +1,27 @@
 #include <arduino.h>
 #include <LiquidCrystal.h>
 
+#ifndef ARDUINO_AVR_ATTINYX5
 const int rs = 2, en = 3, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+#endif
 
 char fadeValueBuffer[50];
 char touchBuffer[50];
 
 int touchSensorValue = 0;
+
+#ifndef ARDUINO_AVR_ATTINYX5
 int touchSensorInputPin = 11;
+#else
+int touchSensorInputPin = PB3;
+#endif
+
+#ifndef ARDUINO_AVR_ATTINYX5
 int ledPin = 12;
+#else
+int ledPin = PB0;
+#endif
 
 long lastDebounceTime = 0;
 unsigned long debounceDelay = 200;
@@ -42,9 +54,12 @@ void updateLed()
     {
         currentLedValue += targetLedValue > currentLedValue ? 1 : -1;
         analogWrite(ledPin, currentLedValue);
+
+#ifndef ARDUINO_AVR_ATTINYX5
         sprintf(fadeValueBuffer, "Led Value: %3d", currentLedValue);
         lcd.setCursor(0, 1);
         lcd.print(fadeValueBuffer);
+#endif
     }
 }
 
@@ -59,9 +74,11 @@ int digitCount(int number) {  // Helper function to calculate the number of digi
 
 void DisplayMessage(const char* message)
 {
+#ifndef ARDUINO_AVR_ATTINYX5
     lcd.setCursor(0, 0);
     sprintf(touchBuffer, "%-16s", message);
     lcd.print(touchBuffer);
+#endif
 }
 
 // Function to format the dim time message
@@ -77,10 +94,16 @@ void formatDimTimeMessage(int elapsedTime) {
 
 void setup() {
     pinMode(ledPin, OUTPUT);
+#ifndef ARDUINO_AVR_ATTINYX5
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
+#endif
+
     pinMode(touchSensorInputPin, INPUT);
+
+#ifndef ARDUINO_AVR_ATTINYX5
     lcd.begin(16, 2);
+#endif
 }
 
 void loop ()
@@ -129,9 +152,11 @@ void loop ()
             if (now - lastDimTimeUpdate >= 1000) {  // check if at least one second has passed
                 int elapsedTime = (int) ((now - dimMillis) / 1000);
 
+#ifndef ARDUINO_AVR_ATTINYX5
                 formatDimTimeMessage(elapsedTime);
                 lcd.setCursor(0, 0);
                 lcd.print(dimTimeMessage);  // Display composed message
+#endif
 
                 lastDimTimeUpdate = now;  // update the time of the last LCD update
             }
